@@ -139,7 +139,11 @@ is_inflation({?TYPE, {Added1, Removed1}}, {?TYPE, {Added2, Removed2}}) ->
 %% @doc Check for strict inflation.
 -spec is_strict_inflation(state_twopset(), state_twopset()) -> boolean().
 is_strict_inflation({?TYPE, _}=CRDT1, {?TYPE, _}=CRDT2) ->
-    state_type:is_strict_inflation(CRDT1, CRDT2).
+    state_type:is_strict_inflation(CRDT1, CRDT2);
+
+%% @todo get back here later
+is_strict_inflation({cardinality, Value}, {?TYPE, _}=CRDT) ->
+    sets:size(query(CRDT)) > Value.
 
 %% @doc Check for irreducible strict inflation.
 -spec irreducible_is_strict_inflation(state_twopset(),
