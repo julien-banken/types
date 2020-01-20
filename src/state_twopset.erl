@@ -134,7 +134,11 @@ is_bottom({?TYPE, {Added, Removed}}) ->
 -spec is_inflation(state_twopset(), state_twopset()) -> boolean().
 is_inflation({?TYPE, {Added1, Removed1}}, {?TYPE, {Added2, Removed2}}) ->
     ordsets:is_subset(Added1, Added2) andalso
-    ordsets:is_subset(Removed1, Removed2).
+    ordsets:is_subset(Removed1, Removed2);
+
+%% @todo get back here later
+is_inflation({cardinality, Value}, {?TYPE, _}=CRDT) ->
+    sets:size(query(CRDT)) >= Value.
 
 %% @doc Check for strict inflation.
 -spec is_strict_inflation(state_twopset(), state_twopset()) -> boolean().
