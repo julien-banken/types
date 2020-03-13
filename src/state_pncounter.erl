@@ -58,7 +58,7 @@
 
 -opaque state_pncounter() :: {?TYPE, payload()}.
 -type payload() :: orddict:orddict().
--type state_pncounter_op() :: increment | decrement.
+-type state_pncounter_op() :: increment | decrement | {increment, integer()} | {decrement, integer()}.
 
 %% @doc Create a new, empty `state_pncounter()'
 -spec new() -> state_pncounter().
@@ -76,7 +76,8 @@ mutate(Op, Actor, {?TYPE, _PNCounter}=CRDT) ->
     state_type:mutate(Op, Actor, CRDT).
 
 %% @doc Delta-mutate a `state_pncounter()'.
-%%      The first argument can be `increment' or `decrement'.
+%%      The first argument can be `increment', `{increment, N}`, `decrement' or
+%%      `{decrement, N}`.
 %%      The second argument is the replica id.
 %%      The third argument is the `state_pncounter()' to be inflated.
 %%      Returns a `state_pncounter()' delta where the only entry in the
@@ -85,16 +86,23 @@ mutate(Op, Actor, {?TYPE, _PNCounter}=CRDT) ->
 %%          where the first component will be the last value for
 %%          increments plus 1 and the second component will be zero
 %%          - vice versa for `decrement'
+%%          - if it is a `{increment, N}` the replica id will map to a pair
+%%          where the first component will be the last value for
+%%          increments plus N and the second component will be zero
+%%          - vice versa for `{decrement, N}'
 -spec delta_mutate(state_pncounter_op(), type:id(), state_pncounter()) ->
     {ok, state_pncounter()}.
 delta_mutate(increment, Actor, {?TYPE, PNCounter}) ->
+    delta_mutate({increment, 1}, Actor, {?TYPE, PNCounter});
+delta_mutate({increment, N}, Actor, {?TYPE, PNCounter}) ->
     {Value, _} = orddict_ext:fetch(Actor, PNCounter, {0, 0}),
-    Delta = orddict:store(Actor, {Value + 1, 0}, orddict:new()),
+    Delta = orddict:store(Actor, {Value + N, 0}, orddict:new()),
     {ok, {?TYPE, Delta}};
-
 delta_mutate(decrement, Actor, {?TYPE, PNCounter}) ->
+    delta_mutate({decrement, 1}, Actor, {?TYPE, PNCounter});
+delta_mutate({decrement, N}, Actor, {?TYPE, PNCounter}) ->
     {_, Value} = orddict_ext:fetch(Actor, PNCounter, {0, 0}),
-    Delta = orddict:store(Actor, {0, Value + 1}, orddict:new()),
+    Delta = orddict:store(Actor, {0, Value + N}, orddict:new()),
     {ok, {?TYPE, Delta}}.
 
 %% @doc Returns the value of the `state_pncounter()'.
