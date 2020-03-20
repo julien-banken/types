@@ -82,8 +82,10 @@ mutate(Op, Actor, {?TYPE, _GCounter}=CRDT) ->
 -spec delta_mutate(state_gcounter_op(), type:id(), state_gcounter()) ->
     {ok, state_gcounter()}.
 delta_mutate(increment, Actor, {?TYPE, GCounter}) ->
+    delta_mutate({increment, 1}, Actor, {?TYPE, GCounter});
+delta_mutate({increment, Value}, Actor, {?TYPE, GCounter}) ->
     Count = orddict_ext:fetch(Actor, GCounter, 0),
-    Delta = orddict:store(Actor, Count + 1, orddict:new()),
+    Delta = orddict:store(Actor, Count + Value, orddict:new()),
     {ok, {?TYPE, Delta}}.
 
 %% @doc Returns the value of the `state_gcounter()'.
